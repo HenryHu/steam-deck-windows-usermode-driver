@@ -108,11 +108,11 @@ namespace SWICD.HVDK
         [DllImport(@"setupapi.dll", CharSet = CharSet.Auto, SetLastError = true)]
         public static extern Boolean SetupDiGetDeviceInterfaceDetail(
             IntPtr hDevInfo,
-            SP_DEVICE_INTERFACE_DATA deviceInterfaceData,
+            ref SP_DEVICE_INTERFACE_DATA deviceInterfaceData,
             IntPtr deviceInterfaceDetailData,
             uint deviceInterfaceDetailDataSize,
             out uint requiredSize,
-            SP_DEVINFO_DATA deviceInfoData);
+            out SP_DEVINFO_DATA deviceInfoData);
 
         [DllImport("HID.dll", CharSet = CharSet.Auto)]
         static extern void HidD_GetHidGuid(out Guid ClassGuid);
@@ -196,7 +196,7 @@ namespace SWICD.HVDK
                     SP_DEVINFO_DATA DevInfoData = new SP_DEVINFO_DATA();
                     DevInfoData.cbSize = (uint)Marshal.SizeOf(DevInfoData);
                     uint needed;
-                    bool result3 = SetupDiGetDeviceInterfaceDetail(PnPHandle, DevInterfaceData, IntPtr.Zero, 0, out needed, DevInfoData);
+                    bool result3 = SetupDiGetDeviceInterfaceDetail(PnPHandle, ref DevInterfaceData, IntPtr.Zero, 0, out needed, out DevInfoData);
                     if (!result3)
                     {
                         int error = Marshal.GetLastWin32Error();
@@ -208,13 +208,13 @@ namespace SWICD.HVDK
                             {
                                 uint size = needed;
                                 Marshal.WriteInt32(DeviceInterfaceDetailData, IntPtr.Size == 8 ? 8 : 6);
-                                bool result4 = SetupDiGetDeviceInterfaceDetail(PnPHandle, DevInterfaceData, DeviceInterfaceDetailData, size, out needed, DevInfoData);
+                                bool result4 = SetupDiGetDeviceInterfaceDetail(PnPHandle, ref DevInterfaceData, DeviceInterfaceDetailData, size, out needed, out DevInfoData);
                                 if (!result4)
                                 {
                                     //shouldn't be an error here
                                     int error1 = Marshal.GetLastWin32Error();
                                     //todo: go +1 and contine the loop...this exception handing is incomplete
-                                }
+                                }                                
                                 IntPtr pDevicePathName = new IntPtr(DeviceInterfaceDetailData.ToInt64() + 4);
                                 FDevicePathName = Marshal.PtrToStringAuto(pDevicePathName);
                                 //see if this driver has readwrite access
